@@ -41,5 +41,5 @@
   "l1BlockTime": 5,
   "ctcL2GasDiscountDivisor": 32,
   "ctcEnqueueGasCost": 60000,
-  "l2GenesisBlockNonce": "0x2140cf6bd1c7c6cf"
+  "l2GenesisBlockNonce": "0x0"
 }
