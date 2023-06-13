@@ -16,7 +16,7 @@ import { Allowable } from "../universal/Allowable.sol";
  *         L2 to L1 can be stored. The storage root of this contract is pulled up to the top level
  *         of the L2 output to reduce the cost of proving the existence of sent messages.
  */
-contract GnosisPayL2ToL1MessagePasser is Allowable, Semver {
+contract AllowableL2ToL1MessagePasser is Allowable, Semver {
     /**
      * @notice The L1 gas limit set when eth is withdrawn using the receive() function.
      */

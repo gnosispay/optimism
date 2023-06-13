@@ -21,7 +21,7 @@ import { Allowable } from "../universal/Allowable.sol";
  *         and L2. Messages sent directly to the OptimismPortal have no form of replayability.
  *         Users are encouraged to use the L1CrossDomainMessenger for a higher-level interface.
  */
-contract OptimismPortal is Allowable, Initializable, ResourceMetering, Semver {
+contract AllowablePortal is Allowable, Initializable, ResourceMetering, Semver {
     /**
      * @notice Represents a proven withdrawal.
      *
