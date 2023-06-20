@@ -347,11 +347,6 @@ func (s *Server) HandleRPC(w http.ResponseWriter, r *http.Request) {
 			writeRPCError(ctx, w, nil, ErrGatewayTimeout)
 			return
 		}
-		if errors.Is(err, ErrConsensusGetReceiptsCantBeBatched) ||
-			errors.Is(err, ErrConsensusGetReceiptsInvalidTarget) {
-			writeRPCError(ctx, w, nil, ErrInvalidRequest(err.Error()))
-			return
-		}
 		if err != nil {
 			writeRPCError(ctx, w, nil, ErrInternal)
 			return
@@ -365,11 +360,6 @@ func (s *Server) HandleRPC(w http.ResponseWriter, r *http.Request) {
 	rawBody := json.RawMessage(body)
 	backendRes, cached, err := s.handleBatchRPC(ctx, []json.RawMessage{rawBody}, isLimited, false)
 	if err != nil {
-		if errors.Is(err, ErrConsensusGetReceiptsCantBeBatched) ||
-			errors.Is(err, ErrConsensusGetReceiptsInvalidTarget) {
-			writeRPCError(ctx, w, nil, ErrInvalidRequest(err.Error()))
-			return
-		}
 		writeRPCError(ctx, w, nil, ErrInternal)
 		return
 	}
@@ -495,10 +485,6 @@ func (s *Server) handleBatchRPC(ctx context.Context, reqs []json.RawMessage, isL
 			elems := cacheMisses[start:end]
 			res, err := s.BackendGroups[group.backendGroup].Forward(ctx, createBatchRequest(elems), isBatch)
 			if err != nil {
-				if errors.Is(err, ErrConsensusGetReceiptsCantBeBatched) ||
-					errors.Is(err, ErrConsensusGetReceiptsInvalidTarget) {
-					return nil, false, err
-				}
 				log.Error(
 					"error forwarding RPC batch",
 					"batch_size", len(elems),

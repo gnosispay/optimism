@@ -7,15 +7,15 @@ const deployFn: DeployFunction = async (hre) => {
 
   await deploy({
     hre,
-    name: 'Lib_AddressManager',
-    contract: 'AddressManager',
-    args: [],
+    name: 'SystemDictatorProxy',
+    contract: 'Proxy',
+    args: [deployer],
     postDeployAction: async (contract) => {
-      await assertContractVariable(contract, 'owner', deployer)
+      await assertContractVariable(contract, 'admin', deployer)
     },
   })
 }
 
-deployFn.tags = ['AddressManager', 'setup', 'l1']
+deployFn.tags = ['SystemDictatorProxy', 'setup', 'l1']
 
 export default deployFn

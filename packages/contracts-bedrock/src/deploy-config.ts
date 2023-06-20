@@ -111,11 +111,6 @@ interface RequiredDeployConfig {
   l2OutputOracleChallenger: string
 
   /**
-   * Whether to enable governance token predeploy.
-   */
-  enableGovernance: boolean
-
-  /**
    * ERC20 symbol used for the L2 GovernanceToken.
    */
   governanceTokenSymbol: string
@@ -419,15 +414,13 @@ export const deployConfigSpec: {
     type: 'number',
     default: 1_000_000,
   },
-  enableGovernance: {
-    type: 'boolean',
-    default: false,
-  },
   governanceTokenSymbol: {
     type: 'string',
+    default: 'OP',
   },
   governanceTokenName: {
     type: 'string',
+    default: 'Optimism',
   },
   governanceTokenOwner: {
     type: 'string',

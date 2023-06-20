@@ -20,44 +20,44 @@ interface IDisputeGame is IInitializable, IVersioned {
 
     /**
      * @notice Returns the timestamp that the DisputeGame contract was created at.
-     * @return createdAt_ The timestamp that the DisputeGame contract was created at.
+     * @return _createdAt The timestamp that the DisputeGame contract was created at.
      */
-    function createdAt() external view returns (Timestamp createdAt_);
+    function createdAt() external view returns (Timestamp _createdAt);
 
     /**
      * @notice Returns the current status of the game.
-     * @return status_ The current status of the game.
+     * @return _status The current status of the game.
      */
-    function status() external view returns (GameStatus status_);
+    function status() external view returns (GameStatus _status);
 
     /**
      * @notice Getter for the game type.
      * @dev `clones-with-immutable-args` argument #1
      * @dev The reference impl should be entirely different depending on the type (fault, validity)
      *      i.e. The game type should indicate the security model.
-     * @return gameType_ The type of proof system being used.
+     * @return _gameType The type of proof system being used.
      */
-    function gameType() external pure returns (GameType gameType_);
+    function gameType() external pure returns (GameType _gameType);
 
     /**
      * @notice Getter for the root claim.
      * @dev `clones-with-immutable-args` argument #2
-     * @return rootClaim_ The root claim of the DisputeGame.
+     * @return _rootClaim The root claim of the DisputeGame.
      */
-    function rootClaim() external pure returns (Claim rootClaim_);
+    function rootClaim() external pure returns (Claim _rootClaim);
 
     /**
      * @notice Getter for the extra data.
      * @dev `clones-with-immutable-args` argument #3
-     * @return extraData_ Any extra data supplied to the dispute game contract by the creator.
+     * @return _extraData Any extra data supplied to the dispute game contract by the creator.
      */
-    function extraData() external pure returns (bytes memory extraData_);
+    function extraData() external pure returns (bytes memory _extraData);
 
     /**
      * @notice Returns the address of the `BondManager` used.
-     * @return bondManager_ The address of the `BondManager` used.
+     * @return _bondManager The address of the `BondManager` used.
      */
-    function bondManager() external view returns (IBondManager bondManager_);
+    function bondManager() external view returns (IBondManager _bondManager);
 
     /**
      * @notice If all necessary information has been gathered, this function should mark the game
@@ -65,25 +65,22 @@ interface IDisputeGame is IInitializable, IVersioned {
      *         the resolved game. It is at this stage that the bonds should be awarded to the
      *         necessary parties.
      * @dev May only be called if the `status` is `IN_PROGRESS`.
-     * @return status_ The status of the game after resolution.
+     * @return _status The status of the game after resolution.
      */
-    function resolve() external returns (GameStatus status_);
+    function resolve() external returns (GameStatus _status);
 
     /**
      * @notice A compliant implementation of this interface should return the components of the
      *         game UUID's preimage provided in the cwia payload. The preimage of the UUID is
      *         constructed as `keccak256(gameType . rootClaim . extraData)` where `.` denotes
      *         concatenation.
-     * @return gameType_ The type of proof system being used.
-     * @return rootClaim_ The root claim of the DisputeGame.
-     * @return extraData_ Any extra data supplied to the dispute game contract by the creator.
      */
     function gameData()
         external
         pure
         returns (
-            GameType gameType_,
-            Claim rootClaim_,
-            bytes memory extraData_
+            GameType _gameType,
+            Claim _rootClaim,
+            bytes memory _extraData
         );
 }
