@@ -4,24 +4,17 @@ pragma solidity ^0.8.15;
 import "../libraries/DisputeTypes.sol";
 import "../libraries/DisputeErrors.sol";
 
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { ClonesWithImmutableArgs } from "@cwia/ClonesWithImmutableArgs.sol";
-import {
-    OwnableUpgradeable
-} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 import { IDisputeGame } from "./interfaces/IDisputeGame.sol";
 import { IDisputeGameFactory } from "./interfaces/IDisputeGameFactory.sol";
-import { IVersioned } from "./interfaces/IVersioned.sol";
 
 /**
  * @title DisputeGameFactory
- * @notice A factory contract for creating `IDisputeGame` contracts. All created dispute games
- *         are stored in both a mapping and an append only array. The timestamp of the creation
- *         time of the dispute game is packed tightly into the storage slot with the address of
- *         the dispute game. This is to make offchain discoverability of playable dispute games
- *         easier.
+ * @notice A factory contract for creating `IDisputeGame` contracts.
  */
-contract DisputeGameFactory is OwnableUpgradeable, IDisputeGameFactory, IVersioned {
+contract DisputeGameFactory is Ownable, IDisputeGameFactory {
     /**
      * @dev Allows for the creation of clone proxies with immutable arguments.
      */
@@ -33,77 +26,29 @@ contract DisputeGameFactory is OwnableUpgradeable, IDisputeGameFactory, IVersion
     mapping(GameType => IDisputeGame) public gameImpls;
 
     /**
-     * @notice Mapping of a hash of `gameType || rootClaim || extraData` to
+     * @notice Mapping of a hash of `gameType . rootClaim . extraData` to
      *         the deployed `IDisputeGame` clone.
-     * @dev Note: `||` denotes concatenation.
+     * @dev Note: `.` denotes concatenation.
      */
-    mapping(Hash => GameId) internal _disputeGames;
-
-    /**
-     * @notice An append-only array of disputeGames that have been created.
-     * @dev This accessor is used by offchain game solvers to efficiently
-     *      track dispute games
-     */
-    GameId[] internal _disputeGameList;
+    mapping(Hash => IDisputeGame) internal disputeGames;
 
     /**
      * @notice Constructs a new DisputeGameFactory contract.
-     */
-    constructor() OwnableUpgradeable() {
-        initialize(address(0));
-    }
-
-    /**
-     * @notice Initializes the contract.
      * @param _owner The owner of the contract.
      */
-    function initialize(address _owner) public initializer {
-        __Ownable_init();
-        _transferOwnership(_owner);
-    }
-
-    /**
-     * @inheritdoc IVersioned
-     * @custom:semver 0.0.2
-     */
-    function version() external pure returns (string memory) {
-        return "0.0.2";
-    }
-
-    /**
-     * @inheritdoc IDisputeGameFactory
-     */
-    function gameCount() external view returns (uint256 gameCount_) {
-        gameCount_ = _disputeGameList.length;
+    constructor(address _owner) Ownable() {
+        transferOwnership(_owner);
     }
 
     /**
      * @inheritdoc IDisputeGameFactory
      */
     function games(
-        GameType _gameType,
-        Claim _rootClaim,
-        bytes calldata _extraData
-    ) external view returns (IDisputeGame proxy_, uint256 timestamp_) {
-        Hash uuid = getGameUUID(_gameType, _rootClaim, _extraData);
-        GameId slot = _disputeGames[uuid];
-        (address addr, uint256 timestamp) = _unpackSlot(slot);
-        proxy_ = IDisputeGame(addr);
-        timestamp_ = timestamp;
-    }
-
-    /**
-     * @inheritdoc IDisputeGameFactory
-     */
-    function gameAtIndex(uint256 _index)
-        external
-        view
-        returns (IDisputeGame proxy_, uint256 timestamp_)
-    {
-        GameId slot = _disputeGameList[_index];
-        (address addr, uint256 timestamp) = _unpackSlot(slot);
-        proxy_ = IDisputeGame(addr);
-        timestamp_ = timestamp;
+        GameType gameType,
+        Claim rootClaim,
+        bytes calldata extraData
+    ) external view returns (IDisputeGame _proxy) {
+        return disputeGames[getGameUUID(gameType, rootClaim, extraData)];
     }
 
     /**
@@ -130,15 +75,12 @@ contract DisputeGameFactory is OwnableUpgradeable, IDisputeGameFactory, IVersion
         Hash uuid = getGameUUID(gameType, rootClaim, extraData);
 
         // If a dispute game with the same UUID already exists, revert.
-        if (GameId.unwrap(_disputeGames[uuid]) != bytes32(0)) {
+        if (address(disputeGames[uuid]) != address(0)) {
             revert GameAlreadyExists(uuid);
         }
 
-        GameId slot = _packSlot(address(proxy), block.timestamp);
-
         // Store the dispute game in the mapping & emit the `DisputeGameCreated` event.
-        _disputeGames[uuid] = slot;
-        _disputeGameList.push(slot);
+        disputeGames[uuid] = proxy;
         emit DisputeGameCreated(address(proxy), gameType, rootClaim);
     }
 
@@ -187,25 +129,5 @@ contract DisputeGameFactory is OwnableUpgradeable, IDisputeGameFactory, IVersion
     function setImplementation(GameType gameType, IDisputeGame impl) external onlyOwner {
         gameImpls[gameType] = impl;
         emit ImplementationSet(address(impl), gameType);
-    }
-
-    /**
-     * @dev Packs an address and a uint256 into a single bytes32 slot. This
-     *      is only safe for up to uint96 values.
-     */
-    function _packSlot(address _addr, uint256 _num) internal pure returns (GameId slot_) {
-        assembly {
-            slot_ := or(shl(0xa0, _num), _addr)
-        }
-    }
-
-    /**
-     * @dev Unpacks an address and a uint256 from a single bytes32 slot.
-     */
-    function _unpackSlot(GameId _slot) internal pure returns (address addr_, uint256 num_) {
-        assembly {
-            addr_ := and(_slot, 0xffffffffffffffffffffffffffffffffffffffff)
-            num_ := shr(0xa0, _slot)
-        }
     }
 }

@@ -31,9 +31,7 @@ bindings: l1block-bindings \
 	l1-fee-vault-bindings \
 	basefee-vault-bindings \
 	legacy-erc20-eth-bindings \
-	dispute-game-factory-bindings \
-	standard-bridge-bindings \
-	cross-domain-messenger-bindings
+	dispute-game-factory-bindings
 
 version:
 	forge --version
@@ -127,12 +125,6 @@ l1-blocknumber-bindings: compile
 
 dispute-game-factory-bindings: compile
 	./gen_bindings.sh contracts/dispute/DisputeGameFactory.sol:DisputeGameFactory $(pkg)
-
-standard-bridge-bindings: compile
-	./gen_bindings.sh contracts/universal/StandardBridge.sol:StandardBridge $(pkg)
-
-cross-domain-messenger-bindings: compile
-	./gen_bindings.sh contracts/universal/CrossDomainMessenger.sol:CrossDomainMessenger $(pkg)
 
 more:
 	go run ./gen/main.go \

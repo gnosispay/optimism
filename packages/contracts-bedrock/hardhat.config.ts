@@ -108,6 +108,12 @@ const config: HardhatUserConfig = {
       accounts: [process.env.PRIVATE_KEY_DEPLOYER || ethers.constants.HashZero],
       live: true,
     },
+    'gnosispay-testnet': {
+      chainId: 10200,
+      url: process.env.L1_RPC || '',
+      accounts: [process.env.PRIVATE_KEY_DEPLOYER || ethers.constants.HashZero],
+      live: true,
+    },
   },
   foundry: {
     buildInfo: true,

@@ -74,11 +74,11 @@ nuke: clean devnet-clean
 .PHONY: nuke
 
 devnet-up:
-	PYTHONPATH=./bedrock-devnet python3 ./bedrock-devnet/main.py --monorepo-dir=.
+	@bash ./ops-bedrock/devnet-up.sh
 .PHONY: devnet-up
 
 devnet-up-deploy:
-	PYTHONPATH=./bedrock-devnet python3 ./bedrock-devnet/main.py --monorepo-dir=. --deploy
+	PYTHONPATH=./bedrock-devnet python3 ./bedrock-devnet/main.py --monorepo-dir=.
 .PHONY: devnet-up-deploy
 
 devnet-down:

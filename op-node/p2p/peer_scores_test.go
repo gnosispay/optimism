@@ -102,19 +102,17 @@ func newGossipSubs(testSuite *PeerScoresTestSuite, ctx context.Context, hosts []
 			&rollup.Config{L2ChainID: big.NewInt(123)},
 			extPeerStore, testSuite.mockMetricer, logger)
 		opts = append(opts, ConfigurePeerScoring(&Config{
-			ScoringParams: &ScoringParams{
-				PeerScoring: pubsub.PeerScoreParams{
-					AppSpecificScore: func(p peer.ID) float64 {
-						if p == hosts[0].ID() {
-							return -1000
-						} else {
-							return 0
-						}
-					},
-					AppSpecificWeight: 1,
-					DecayInterval:     time.Second,
-					DecayToZero:       0.01,
+			PeerScoring: pubsub.PeerScoreParams{
+				AppSpecificScore: func(p peer.ID) float64 {
+					if p == hosts[0].ID() {
+						return -1000
+					} else {
+						return 0
+					}
 				},
+				AppSpecificWeight: 1,
+				DecayInterval:     time.Second,
+				DecayToZero:       0.01,
 			},
 		}, scorer, logger)...)
 		ps, err := pubsub.NewGossipSubWithRouter(ctx, h, rt, opts...)

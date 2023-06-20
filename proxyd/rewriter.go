@@ -63,7 +63,7 @@ func RewriteRequest(rctx RewriteContext, req *RPCReq, res *RPCRes) (RewriteResul
 	case "eth_getLogs",
 		"eth_newFilter":
 		return rewriteRange(rctx, req, res, 0)
-	case "debug_getRawReceipts", "consensus_getReceipts":
+	case "debug_getRawReceipts":
 		return rewriteParam(rctx, req, res, 0, true)
 	case "eth_getBalance",
 		"eth_getCode",

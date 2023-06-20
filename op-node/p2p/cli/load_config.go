@@ -10,7 +10,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/ethereum-optimism/optimism/op-node/rollup"
 	ds "github.com/ipfs/go-datastore"
 	"github.com/ipfs/go-datastore/sync"
 	leveldb "github.com/ipfs/go-ds-leveldb"
@@ -25,7 +24,7 @@ import (
 	"github.com/ethereum/go-ethereum/p2p/enode"
 )
 
-func NewConfig(ctx *cli.Context, rollupCfg *rollup.Config) (*p2p.Config, error) {
+func NewConfig(ctx *cli.Context, blockTime uint64) (*p2p.Config, error) {
 	conf := &p2p.Config{}
 
 	if ctx.GlobalBool(flags.DisableP2P.Name) {
@@ -55,12 +54,16 @@ func NewConfig(ctx *cli.Context, rollupCfg *rollup.Config) (*p2p.Config, error) 
 		return nil, fmt.Errorf("failed to load p2p gossip options: %w", err)
 	}
 
-	if err := loadScoringParams(conf, ctx, rollupCfg); err != nil {
+	if err := loadPeerScoringParams(conf, ctx, blockTime); err != nil {
 		return nil, fmt.Errorf("failed to load p2p peer scoring options: %w", err)
 	}
 
 	if err := loadBanningOptions(conf, ctx); err != nil {
 		return nil, fmt.Errorf("failed to load banning option: %w", err)
+	}
+
+	if err := loadTopicScoringParams(conf, ctx, blockTime); err != nil {
+		return nil, fmt.Errorf("failed to load p2p topic scoring options: %w", err)
 	}
 
 	conf.EnableReqRespSync = ctx.GlobalBool(flags.SyncReqRespFlag.Name)
@@ -81,22 +84,37 @@ func validatePort(p uint) (uint16, error) {
 	return uint16(p), nil
 }
 
-// loadScoringParams loads the peer scoring options from the CLI context.
-func loadScoringParams(conf *p2p.Config, ctx *cli.Context, rollupCfg *rollup.Config) error {
-	scoringLevel := ctx.GlobalString(flags.Scoring.Name)
-	// Check old names for backwards compatibility
-	if scoringLevel == "" {
-		scoringLevel = ctx.GlobalString(flags.PeerScoring.Name)
-	}
-	if scoringLevel == "" {
-		scoringLevel = ctx.GlobalString(flags.TopicScoring.Name)
-	}
+// loadTopicScoringParams loads the topic scoring options from the CLI context.
+//
+// If the topic scoring options are not set, then the default topic scoring.
+func loadTopicScoringParams(conf *p2p.Config, ctx *cli.Context, blockTime uint64) error {
+	scoringLevel := ctx.GlobalString(flags.TopicScoring.Name)
 	if scoringLevel != "" {
-		params, err := p2p.GetScoringParams(scoringLevel, rollupCfg)
+		// Set default block topic scoring parameters
+		// See prysm: https://github.com/prysmaticlabs/prysm/blob/develop/beacon-chain/p2p/gossip_scoring_params.go
+		// And research from lighthouse: https://gist.github.com/blacktemplar/5c1862cb3f0e32a1a7fb0b25e79e6e2c
+		// And docs: https://github.com/libp2p/specs/blob/master/pubsub/gossipsub/gossipsub-v1.1.md#topic-parameter-calculation-and-decay
+		topicScoreParams, err := p2p.GetTopicScoreParams(scoringLevel, blockTime)
 		if err != nil {
 			return err
 		}
-		conf.ScoringParams = params
+		conf.TopicScoring = topicScoreParams
+	}
+
+	return nil
+}
+
+// loadPeerScoringParams loads the scoring options from the CLI context.
+//
+// If the scoring level is not set, no scoring is enabled.
+func loadPeerScoringParams(conf *p2p.Config, ctx *cli.Context, blockTime uint64) error {
+	scoringLevel := ctx.GlobalString(flags.PeerScoring.Name)
+	if scoringLevel != "" {
+		peerScoreParams, err := p2p.GetPeerScoreParams(scoringLevel, blockTime)
+		if err != nil {
+			return err
+		}
+		conf.PeerScoring = peerScoreParams
 	}
 
 	return nil
