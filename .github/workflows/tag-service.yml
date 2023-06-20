@@ -24,7 +24,6 @@ on:
           - proxyd
           - indexer
           - fault-detector
-          - ci-builder
       prerelease:
         description: Increment major/minor/patch as prerelease?
         required: false

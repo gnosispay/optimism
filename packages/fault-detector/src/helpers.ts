@@ -66,7 +66,7 @@ export const updateOracleCache = async <TSubmissionEventArgs>(
     latestBlock: endBlock,
   })
 
-  let failures = []
+  let failures = 0
   let currentBlock = cache.highestBlock + 1
   let step = endBlock - currentBlock
   while (currentBlock < endBlock) {
@@ -98,7 +98,7 @@ export const updateOracleCache = async <TSubmissionEventArgs>(
       currentBlock += step
       step = Math.ceil(step * 2)
     } catch (err) {
-      logger?.warn('error fetching events', {
+      logger?.error('error fetching events', {
         err,
         node: 'l1',
         section: 'getLogs',
@@ -110,14 +110,14 @@ export const updateOracleCache = async <TSubmissionEventArgs>(
       // When the step gets down to zero, we're pretty much guaranteed that range size isn't the
       // problem. If we get three failures like this in a row then we should just give up.
       if (step === 0) {
-        failures.push(err)
+        failures++
       } else {
-        failures = []
+        failures = 0
       }
 
-      // We've failed 5 times in a row, we're probably stuck.
-      if (failures.length >= 5) {
-        logger?.fatal('unable to fetch oracle events', { errors: failures })
+      // We've failed 3 times in a row, we're probably stuck.
+      if (failures >= 3) {
+        logger?.fatal('unable to fetch oracle events', { err })
         throw new Error('failed to update event cache')
       }
     }
